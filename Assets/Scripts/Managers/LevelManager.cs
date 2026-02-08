@@ -1,23 +1,16 @@
 // ============================================================
 // FILE: LevelManager.cs
-// PURPOSE: Controls the visibility of student groups based on 
-//          the current exposure level in the VR classroom
+// PURPOSE: Controls the visibility of student groups based on
+//          the current exposure level in the VR classroom.
+//          Manages transitions between 4 difficulty levels.
 // 
-// AUTHOR: Dharmarathne I D D R
-// DATE CREATED: January 15, 2025
-// LAST MODIFIED: January 15, 2025
+// AUTHOR: DulakshiniDharmarathne
+// DATE CREATED: 08 February 2026
+// LAST MODIFIED: 08 February 2026
 // 
 // DEPENDENCIES:
 //   - UnityEngine
 //   - TMPro (TextMeshPro package)
-// 
-// PUBLIC VARIABLES (Set in Inspector):
-//   - level2Group: GameObject containing 5 students
-//   - level3Additional: GameObject containing 7 more students
-//   - level4Additional: GameObject containing 8 more students
-//   - levelText: TMP_Text for displaying level name
-//   - studentCountText: TMP_Text for displaying student count
-//   - levelChangeSound: AudioSource for level change feedback
 // 
 // USAGE:
 //   1. Attach this script to a GameObject named "GameManager"
@@ -36,100 +29,296 @@ using TMPro;
 
 public class LevelManager : MonoBehaviour
 {
+    // ========================================
+    // INSPECTOR VARIABLES
+    // ========================================
+
     [Header("Student Groups")]
+    [Tooltip("GameObject containing students 1-5 (for Level 2)")]
     public GameObject level2Group;
+
+    [Tooltip("GameObject containing students 6-12 (additional for Level 3)")]
     public GameObject level3Additional;
+
+    [Tooltip("GameObject containing students 13-20 (additional for Level 4)")]
     public GameObject level4Additional;
 
     [Header("UI References")]
+    [Tooltip("Text element to display current level name")]
     public TMP_Text levelText;
+
+    [Tooltip("Text element to display current student count")]
     public TMP_Text studentCountText;
 
-    [Header("Audio")]
+    [Header("Audio Feedback")]
+    [Tooltip("Audio source for level change sound effect")]
     public AudioSource levelChangeSound;
+
+    [Header("Settings")]
+    [Tooltip("Starting level when scene loads (1-4)")]
+    [Range(1, 4)]
+    public int startingLevel = 1;
+
+    // ========================================
+    // PRIVATE VARIABLES
+    // ========================================
 
     private int currentLevel = 1;
 
-    void Start()
+    // Level information arrays
+    private readonly string[] levelNames =
     {
-        SetLevel(1);
+        "",
+        "Level 1: Empty Classroom",
+        "Level 2: Small Group",
+        "Level 3: Medium Class",
+        "Level 4: Full Classroom"
+    };
+
+    private readonly string[] levelDescriptions =
+    {
+        "",
+        "Practice in an empty room",
+        "5 students present",
+        "12 students present",
+        "20 students present"
+    };
+
+    private readonly int[] studentCounts = { 0, 0, 5, 12, 20 };
+
+    // ========================================
+    // UNITY LIFECYCLE METHODS
+    // ========================================
+
+    /// <summary>
+    /// Called when the script instance is being loaded.
+    /// Initializes the level system.
+    /// </summary>
+    private void Awake()
+    {
+        // Validate starting level
+        if (startingLevel < 1 || startingLevel > 4)
+        {
+            Debug.LogWarning("LevelManager: Invalid starting level. Defaulting to Level 1.");
+            startingLevel = 1;
+        }
     }
 
     /// <summary>
-    /// Sets the current exposure level and updates student visibility
+    /// Called before the first frame update.
+    /// Sets up the initial level state.
     /// </summary>
-    /// <param name="level">Level number (1-4)</param>
+    private void Start()
+    {
+        // Initialize to starting level
+        SetLevel(startingLevel);
+
+        Debug.Log("LevelManager: Initialized at Level " + startingLevel);
+    }
+
+    // ========================================
+    // PUBLIC METHODS
+    // ========================================
+
+    /// <summary>
+    /// Sets the current exposure level and updates student visibility.
+    /// </summary>
+    /// <param name="level">Level number from 1 to 4</param>
     public void SetLevel(int level)
     {
+        // Validate level input
+        if (level < 1 || level > 4)
+        {
+            Debug.LogError("LevelManager: Invalid level " + level + ". Must be between 1 and 4.");
+            return;
+        }
+
+        // Store current level
         currentLevel = level;
 
-        // Hide all students first
-        if (level2Group != null)
-            level2Group.SetActive(false);
-        if (level3Additional != null)
-            level3Additional.SetActive(false);
-        if (level4Additional != null)
-            level4Additional.SetActive(false);
+        // Hide all student groups first
+        HideAllStudents();
 
-        // Show students based on level
+        // Show appropriate students based on level
         switch (level)
         {
             case 1:
-                // Empty classroom - all hidden
-                Debug.Log("Level 1: Empty Classroom");
+                // Empty classroom - all students hidden
+                Debug.Log("LevelManager: Level 1 - Empty Classroom (0 students)");
                 break;
+
             case 2:
-                level2Group.SetActive(true);
-                Debug.Log("Level 2: 5 Students");
+                // Small group - show first 5 students
+                ShowStudentGroup(level2Group);
+                Debug.Log("LevelManager: Level 2 - Small Group (5 students)");
                 break;
+
             case 3:
-                level2Group.SetActive(true);
-                level3Additional.SetActive(true);
-                Debug.Log("Level 3: 12 Students");
+                // Medium class - show 12 students
+                ShowStudentGroup(level2Group);
+                ShowStudentGroup(level3Additional);
+                Debug.Log("LevelManager: Level 3 - Medium Class (12 students)");
                 break;
+
             case 4:
-                level2Group.SetActive(true);
-                level3Additional.SetActive(true);
-                level4Additional.SetActive(true);
-                Debug.Log("Level 4: 20 Students");
+                // Full classroom - show all 20 students
+                ShowStudentGroup(level2Group);
+                ShowStudentGroup(level3Additional);
+                ShowStudentGroup(level4Additional);
+                Debug.Log("LevelManager: Level 4 - Full Classroom (20 students)");
                 break;
         }
 
-        // Update UI
+        // Update UI elements
         UpdateUI();
 
-        // Play sound
-        if (levelChangeSound != null)
-            levelChangeSound.Play();
+        // Play audio feedback
+        PlayLevelChangeSound();
     }
 
     /// <summary>
-    /// Updates the UI text elements with current level info
-    /// </summary>
-    private void UpdateUI()
-    {
-        string[] levelNames = {
-            "",
-            "Empty Classroom",
-            "Small Group",
-            "Medium Class",
-            "Full Classroom"
-        };
-        int[] studentCounts = { 0, 0, 5, 12, 20 };
-
-        if (levelText != null)
-            levelText.text = levelNames[currentLevel];
-
-        if (studentCountText != null)
-            studentCountText.text = "Students: " + studentCounts[currentLevel];
-    }
-
-    /// <summary>
-    /// Returns the current level number
+    /// Returns the current level number.
     /// </summary>
     /// <returns>Current level (1-4)</returns>
     public int GetCurrentLevel()
     {
         return currentLevel;
     }
+
+    /// <summary>
+    /// Returns the name of the current level.
+    /// </summary>
+    /// <returns>Level name string</returns>
+    public string GetCurrentLevelName()
+    {
+        return levelNames[currentLevel];
+    }
+
+    /// <summary>
+    /// Returns the student count for the current level.
+    /// </summary>
+    /// <returns>Number of students visible</returns>
+    public int GetCurrentStudentCount()
+    {
+        return studentCounts[currentLevel];
+    }
+
+    /// <summary>
+    /// Advances to the next level. Wraps from 4 to 1.
+    /// </summary>
+    public void NextLevel()
+    {
+        int nextLevel = currentLevel + 1;
+        if (nextLevel > 4)
+        {
+            nextLevel = 1;
+        }
+        SetLevel(nextLevel);
+    }
+
+    /// <summary>
+    /// Goes back to the previous level. Wraps from 1 to 4.
+    /// </summary>
+    public void PreviousLevel()
+    {
+        int prevLevel = currentLevel - 1;
+        if (prevLevel < 1)
+        {
+            prevLevel = 4;
+        }
+        SetLevel(prevLevel);
+    }
+
+    // Convenience methods for UI buttons
+    public void GoToLevel1() { SetLevel(1); }
+    public void GoToLevel2() { SetLevel(2); }
+    public void GoToLevel3() { SetLevel(3); }
+    public void GoToLevel4() { SetLevel(4); }
+
+    // ========================================
+    // PRIVATE HELPER METHODS
+    // ========================================
+
+    /// <summary>
+    /// Hides all student groups.
+    /// </summary>
+    private void HideAllStudents()
+    {
+        HideStudentGroup(level2Group);
+        HideStudentGroup(level3Additional);
+        HideStudentGroup(level4Additional);
+    }
+
+    /// <summary>
+    /// Shows a specific student group if it exists.
+    /// </summary>
+    /// <param name="group">The student group GameObject to show</param>
+    private void ShowStudentGroup(GameObject group)
+    {
+        if (group != null)
+        {
+            group.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("LevelManager: Student group reference is null.");
+        }
+    }
+
+    /// <summary>
+    /// Hides a specific student group if it exists.
+    /// </summary>
+    /// <param name="group">The student group GameObject to hide</param>
+    private void HideStudentGroup(GameObject group)
+    {
+        if (group != null)
+        {
+            group.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Updates UI text elements with current level information.
+    /// </summary>
+    private void UpdateUI()
+    {
+        // Update level name text
+        if (levelText != null)
+        {
+            levelText.text = levelNames[currentLevel];
+        }
+
+        // Update student count text
+        if (studentCountText != null)
+        {
+            studentCountText.text = "Students: " + studentCounts[currentLevel];
+        }
+    }
+
+    /// <summary>
+    /// Plays the level change sound effect if available.
+    /// </summary>
+    private void PlayLevelChangeSound()
+    {
+        if (levelChangeSound != null)
+        {
+            levelChangeSound.Play();
+        }
+    }
+
+    // ========================================
+    // VALIDATION (EDITOR ONLY)
+    // ========================================
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Called in the editor when the script is loaded or a value is changed.
+    /// Used for validation.
+    /// </summary>
+    private void OnValidate()
+    {
+        // Clamp starting level
+        startingLevel = Mathf.Clamp(startingLevel, 1, 4);
+    }
+#endif
 }
