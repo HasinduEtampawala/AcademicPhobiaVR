@@ -6,7 +6,7 @@
 // 
 // AUTHOR: DulakshiniDharmarathne
 // DATE CREATED: 08 February 2026
-// LAST MODIFIED: 08 February 2026
+// LAST MODIFIED: 18 June 2026
 // 
 // DEPENDENCIES:
 //   - UnityEngine
@@ -20,8 +20,8 @@
 // LEVELS:
 //   Level 1: Empty classroom (0 students)
 //   Level 2: Small group (5 students)
-//   Level 3: Medium class (12 students)
-//   Level 4: Full classroom (20 students)
+//   Level 3: Medium class (11 students)
+//   Level 4: Full classroom (16 students)
 // ============================================================
 
 using UnityEngine;
@@ -37,10 +37,10 @@ public class LevelManager : MonoBehaviour
     [Tooltip("GameObject containing students 1-5 (for Level 2)")]
     public GameObject level2Group;
 
-    [Tooltip("GameObject containing students 6-12 (additional for Level 3)")]
+    [Tooltip("GameObject containing students 6-11 (additional for Level 3)")]
     public GameObject level3Additional;
 
-    [Tooltip("GameObject containing students 13-20 (additional for Level 4)")]
+    [Tooltip("GameObject containing students 12-16 (additional for Level 4)")]
     public GameObject level4Additional;
 
     [Header("UI References")]
@@ -80,11 +80,11 @@ public class LevelManager : MonoBehaviour
         "",
         "Practice in an empty room",
         "5 students present",
-        "12 students present",
-        "20 students present"
+        "11 students present",
+        "16 students present"
     };
 
-    private readonly int[] studentCounts = { 0, 0, 5, 12, 20 };
+    private readonly int[] studentCounts = { 0, 0, 5, 11, 16 };
 
     // ========================================
     // UNITY LIFECYCLE METHODS
@@ -154,18 +154,18 @@ public class LevelManager : MonoBehaviour
                 break;
 
             case 3:
-                // Medium class - show 12 students
+                // Medium class - show 11 students
                 ShowStudentGroup(level2Group);
                 ShowStudentGroup(level3Additional);
-                Debug.Log("LevelManager: Level 3 - Medium Class (12 students)");
+                Debug.Log("LevelManager: Level 3 - Medium Class (11 students)");
                 break;
 
             case 4:
-                // Full classroom - show all 20 students
+                // Full classroom - show all 16 students
                 ShowStudentGroup(level2Group);
                 ShowStudentGroup(level3Additional);
                 ShowStudentGroup(level4Additional);
-                Debug.Log("LevelManager: Level 4 - Full Classroom (20 students)");
+                Debug.Log("LevelManager: Level 4 - Full Classroom (16 students)");
                 break;
         }
 
