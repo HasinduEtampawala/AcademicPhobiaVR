@@ -1796,8 +1796,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de5a97efd94891b4d917a57badaa4d2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelManager: {fileID: 765239100}
-  sessionManager: {fileID: 765239099}
+  levelManager: {fileID: 0}
+  sessionManager: {fileID: 0}
   enableHapticFeedback: 1
   hapticDuration: 0.1
   hapticStrength: 0.5
@@ -1823,12 +1823,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ac48195d7b5a2c45856b456d8072aa2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelManager: {fileID: 765239100}
-  mainMenuCanvas: {fileID: 1344700231}
-  sessionUICanvas: {fileID: 1822217772}
-  pauseMenuCanvas: {fileID: 844648162}
-  timerText: {fileID: 559031441}
-  statusText: {fileID: 1102753947}
+  levelManager: {fileID: 0}
+  mainMenuCanvas: {fileID: 0}
+  sessionUICanvas: {fileID: 0}
+  pauseMenuCanvas: {fileID: 0}
+  timerText: {fileID: 0}
+  statusText: {fileID: 0}
   sessionStartSound: {fileID: 0}
   sessionEndSound: {fileID: 0}
   onSessionStart:
@@ -1859,7 +1859,7 @@ MonoBehaviour:
   level3Additional: {fileID: 826345572}
   level4Additional: {fileID: 22866419}
   levelText: {fileID: 0}
-  studentCountText: {fileID: 149553004}
+  studentCountText: {fileID: 0}
   levelChangeSound: {fileID: 0}
   startingLevel: 1
 --- !u!4 &765239101
