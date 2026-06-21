@@ -106,7 +106,6 @@ public class PerformanceManager : MonoBehaviour
     /// </summary>
     private void ApplyFoveatedRendering()
     {
-#if OCULUS_XR_AVAILABLE
         try
         {
             OVRManager.fixedFoveatedRenderingLevel = OVRManager.FixedFoveatedRenderingLevel.Medium;
@@ -116,9 +115,6 @@ public class PerformanceManager : MonoBehaviour
         {
             Debug.LogWarning("PerformanceManager: Could not set foveated rendering: " + e.Message);
         }
-#else
-        if (debugMode) Debug.Log("PerformanceManager: Meta XR SDK not detected, skipping foveated rendering");
-#endif
     }
 
     // ========================================

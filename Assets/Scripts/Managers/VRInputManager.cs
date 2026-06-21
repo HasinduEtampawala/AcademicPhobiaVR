@@ -6,19 +6,15 @@
 // 
 // AUTHOR: DulakshiniDharmarathne
 // DATE CREATED: 08 February 2026
-// LAST MODIFIED: 08 February 2026
+// LAST MODIFIED: 21 June 2026
 // 
 // DEPENDENCIES:
 //   - UnityEngine
-//   - Meta XR SDK (for OVRInput) - Optional, has fallback
+//   - Meta XR SDK (for OVRInput)
 //   - LevelManager.cs
 //   - SessionManager.cs
 // 
-// NOTE: This script works with or without Meta XR SDK.
-//       When SDK is not installed, keyboard controls work for testing.
-//       When SDK is installed, VR controller input works.
-// 
-// CONTROLLER MAPPING (when SDK installed):
+// CONTROLLER MAPPING:
 //   - A Button: Confirm / Select
 //   - B Button: Back / Exit to Menu
 //   - X Button: Previous Level (during session)
@@ -78,185 +74,107 @@ public class VRInputManager : MonoBehaviour
     public UnityEvent onTriggerPressed;
 
     // ========================================
-    // PRIVATE VARIABLES
-    // ========================================
-
-    private bool ovrInputAvailable = false;
-
-    // ========================================
     // UNITY LIFECYCLE METHODS
     // ========================================
 
-    /// <summary>
-    /// Called when the script instance is being loaded.
-    /// </summary>
-    private void Awake()
-    {
-        // Check if OVRInput is available (Meta XR SDK installed)
-        CheckOVRInputAvailability();
-    }
-
-    /// <summary>
-    /// Called before the first frame update.
-    /// </summary>
     private void Start()
     {
-        // Try to find managers if not assigned
         FindManagers();
-
-        if (ovrInputAvailable)
-        {
-            Debug.Log("VRInputManager: Initialized with Meta XR SDK support");
-        }
-        else
-        {
-            Debug.Log("VRInputManager: Initialized in keyboard-only mode (Meta XR SDK not found)");
-            Debug.Log("VRInputManager: Use keyboard for testing - Space=Select, Escape=Back, 1-4=Levels");
-        }
+        Debug.Log("VRInputManager: Initialized with Meta XR SDK support + keyboard fallback");
     }
 
-    /// <summary>
-    /// Called every frame.
-    /// </summary>
     private void Update()
     {
-        // Process VR controller input if available
-        if (ovrInputAvailable)
-        {
-            ProcessOVRControllerInput();
-        }
+        // Process VR controller input (Meta XR SDK)
+        ProcessOVRControllerInput();
 
         // Always process keyboard input (for editor testing)
         ProcessKeyboardInput();
     }
 
     // ========================================
-    // OVR INPUT AVAILABILITY CHECK
-    // ========================================
-
-    /// <summary>
-    /// Checks if OVRInput (Meta XR SDK) is available.
-    /// </summary>
-    private void CheckOVRInputAvailability()
-    {
-        // Try to find OVRInput type using reflection
-        System.Type ovrInputType = System.Type.GetType("OVRInput, Oculus.VR");
-
-        if (ovrInputType != null)
-        {
-            ovrInputAvailable = true;
-        }
-        else
-        {
-            // Also check assembly qualified name variations
-            ovrInputType = System.Type.GetType("OVRInput, Meta.XR.Core");
-            if (ovrInputType != null)
-            {
-                ovrInputAvailable = true;
-            }
-            else
-            {
-                ovrInputAvailable = false;
-            }
-        }
-    }
-
-    // ========================================
     // VR CONTROLLER INPUT PROCESSING
     // ========================================
 
-    /// <summary>
-    /// Processes VR controller input using OVRInput.
-    /// This method only runs if Meta XR SDK is installed.
-    /// </summary>
     private void ProcessOVRControllerInput()
     {
-#if OCULUS_XR_AVAILABLE
-        // A Button - Confirm / Select
+        // A Button - Confirm / Select (Right Controller)
         if (OVRInput.GetDown(OVRInput.Button.One))
         {
+            if (debugMode) Debug.Log("VRInputManager: A Button pressed");
             OnConfirmPress();
-            TriggerHapticPulse(true); // Right controller
+            TriggerHapticPulse(true);
         }
-        
-        // B Button - Back / Exit
+
+        // B Button - Back / Exit (Right Controller)
         if (OVRInput.GetDown(OVRInput.Button.Two))
         {
+            if (debugMode) Debug.Log("VRInputManager: B Button pressed");
             OnBackPress();
-            TriggerHapticPulse(true); // Right controller
+            TriggerHapticPulse(true);
         }
-        
-        // X Button - Previous Level
+
+        // X Button - Previous Level (Left Controller)
         if (OVRInput.GetDown(OVRInput.Button.Three))
         {
+            if (debugMode) Debug.Log("VRInputManager: X Button pressed");
             OnPreviousLevelPress();
-            TriggerHapticPulse(false); // Left controller
+            TriggerHapticPulse(false);
         }
-        
-        // Y Button - Next Level
+
+        // Y Button - Next Level (Left Controller)
         if (OVRInput.GetDown(OVRInput.Button.Four))
         {
+            if (debugMode) Debug.Log("VRInputManager: Y Button pressed");
             OnNextLevelPress();
-            TriggerHapticPulse(false); // Left controller
+            TriggerHapticPulse(false);
         }
-        
+
         // Right Trigger - UI Click
         if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))
         {
+            if (debugMode) Debug.Log("VRInputManager: Right Trigger pressed");
             OnTriggerPress();
-            TriggerHapticPulse(true); // Right controller
+            TriggerHapticPulse(true);
         }
-        
+
         // Right Thumbstick Press - Toggle Pause
         if (OVRInput.GetDown(OVRInput.Button.SecondaryThumbstick))
         {
+            if (debugMode) Debug.Log("VRInputManager: Thumbstick pressed (Pause)");
             OnPausePress();
-            TriggerHapticPulse(true); // Right controller
+            TriggerHapticPulse(true);
         }
-        
-        // Start Button - Menu
+
+        // Start/Menu Button - Toggle Pause
         if (OVRInput.GetDown(OVRInput.Button.Start))
         {
+            if (debugMode) Debug.Log("VRInputManager: Start button pressed (Pause)");
             OnPausePress();
-            TriggerHapticPulse(false); // Left controller
+            TriggerHapticPulse(false);
         }
-#endif
     }
 
-    /// <summary>
-    /// Triggers haptic feedback on specified controller.
-    /// </summary>
-    /// <param name="rightController">True for right controller, false for left</param>
     private void TriggerHapticPulse(bool rightController)
     {
         if (!enableHapticFeedback) return;
 
-#if OCULUS_XR_AVAILABLE
-        OVRInput.Controller controller = rightController ? 
+        OVRInput.Controller controller = rightController ?
             OVRInput.Controller.RTouch : OVRInput.Controller.LTouch;
         OVRInput.SetControllerVibration(hapticStrength, hapticStrength, controller);
         Invoke(nameof(StopHaptics), hapticDuration);
-#endif
     }
 
-    /// <summary>
-    /// Stops haptic feedback on both controllers.
-    /// </summary>
     private void StopHaptics()
     {
-#if OCULUS_XR_AVAILABLE
         OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);
         OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
-#endif
     }
 
     // ========================================
     // KEYBOARD INPUT PROCESSING
     // ========================================
 
-    /// <summary>
-    /// Processes keyboard input for editor testing.
-    /// </summary>
     private void ProcessKeyboardInput()
     {
         // Space = Confirm (like A button)
@@ -324,42 +242,28 @@ public class VRInputManager : MonoBehaviour
     // INPUT ACTION HANDLERS
     // ========================================
 
-    /// <summary>
-    /// Called when confirm action is triggered (A button or Space).
-    /// </summary>
     private void OnConfirmPress()
     {
         if (debugMode) Debug.Log("VRInputManager: Confirm pressed");
-
-        // Invoke event for UI or other systems to respond
         onAButtonPressed?.Invoke();
     }
 
-    /// <summary>
-    /// Called when back action is triggered (B button or Escape).
-    /// </summary>
     private void OnBackPress()
     {
         if (debugMode) Debug.Log("VRInputManager: Back pressed");
 
-        // If in session, end it
         if (sessionManager != null && sessionManager.IsSessionActive)
         {
             sessionManager.EndSession();
         }
 
-        // Invoke event
         onBButtonPressed?.Invoke();
     }
 
-    /// <summary>
-    /// Called when previous level action is triggered (X button or Left Arrow).
-    /// </summary>
     private void OnPreviousLevelPress()
     {
         if (debugMode) Debug.Log("VRInputManager: Previous Level pressed");
 
-        // Only change level if in active session and not paused
         if (sessionManager != null && sessionManager.IsSessionActive && !sessionManager.IsSessionPaused)
         {
             if (levelManager != null)
@@ -369,14 +273,10 @@ public class VRInputManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when next level action is triggered (Y button or Right Arrow).
-    /// </summary>
     private void OnNextLevelPress()
     {
         if (debugMode) Debug.Log("VRInputManager: Next Level pressed");
 
-        // Only change level if in active session and not paused
         if (sessionManager != null && sessionManager.IsSessionActive && !sessionManager.IsSessionPaused)
         {
             if (levelManager != null)
@@ -386,25 +286,16 @@ public class VRInputManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called when trigger action is triggered (Trigger or Mouse Click).
-    /// </summary>
     private void OnTriggerPress()
     {
         if (debugMode) Debug.Log("VRInputManager: Trigger pressed");
-
-        // Invoke event
         onTriggerPressed?.Invoke();
     }
 
-    /// <summary>
-    /// Called when pause action is triggered (Thumbstick press or P key).
-    /// </summary>
     private void OnPausePress()
     {
         if (debugMode) Debug.Log("VRInputManager: Pause pressed");
 
-        // Toggle pause if in session
         if (sessionManager != null && sessionManager.IsSessionActive)
         {
             sessionManager.TogglePause();
@@ -415,11 +306,6 @@ public class VRInputManager : MonoBehaviour
     // PUBLIC METHODS
     // ========================================
 
-    /// <summary>
-    /// Starts a session at the specified level.
-    /// Can be called from UI buttons.
-    /// </summary>
-    /// <param name="level">Level to start (1-4)</param>
     public void StartSessionAtLevel(int level)
     {
         if (debugMode) Debug.Log("VRInputManager: Starting session at level " + level);
@@ -434,10 +320,6 @@ public class VRInputManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Ends the current session and returns to menu.
-    /// Can be called from UI buttons.
-    /// </summary>
     public void ReturnToMenu()
     {
         if (sessionManager != null)
@@ -446,9 +328,6 @@ public class VRInputManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Quits the application.
-    /// </summary>
     public void QuitApplication()
     {
         Debug.Log("VRInputManager: Quitting application");
@@ -460,21 +339,10 @@ public class VRInputManager : MonoBehaviour
 #endif
     }
 
-    /// <summary>
-    /// Returns whether VR input (Meta XR SDK) is available.
-    /// </summary>
-    public bool IsVRInputAvailable()
-    {
-        return ovrInputAvailable;
-    }
-
     // ========================================
     // HELPER METHODS
     // ========================================
 
-    /// <summary>
-    /// Attempts to find manager references if not assigned.
-    /// </summary>
     private void FindManagers()
     {
         if (levelManager == null)
