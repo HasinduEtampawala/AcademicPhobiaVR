@@ -50,6 +50,10 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Reference to LevelManager to detect level changes")]
     public LevelManager levelManager;
 
+    [Header("Debug")]
+    [Tooltip("Show ambient sound start/stop messages in console")]
+    public bool debugMode = false;
+
     // ========================================
     // PRIVATE VARIABLES
     // ========================================
@@ -120,7 +124,50 @@ public class AudioManager : MonoBehaviour
             lastLevel = currentLevel;
         }
 
+        // Keep the ambient sound in sync with the current situation,
+        // checked every frame. This is what makes Level 1 silent even
+        // when reached mid-session via Next/Previous Level, not just
+        // when chosen from the main menu.
+        UpdateAmbientSoundState();
+
         wasSessionActive = sessionManager.IsSessionActive;
+    }
+
+    /// <summary>
+    /// Starts or stops the looping ambient sound so it always matches
+    /// whether it SHOULD be playing right now.
+    /// </summary>
+    private void UpdateAmbientSoundState()
+    {
+        if (ambientSource == null) return;
+
+        bool shouldPlay = ShouldPlayAmbientSound();
+
+        if (shouldPlay && !ambientSource.isPlaying)
+        {
+            ambientSource.Play();
+            if (debugMode) Debug.Log("AudioManager: Ambient sound started");
+        }
+        else if (!shouldPlay && ambientSource.isPlaying)
+        {
+            ambientSource.Stop();
+            if (debugMode) Debug.Log("AudioManager: Ambient sound stopped");
+        }
+    }
+
+    /// <summary>
+    /// Decides whether the background classroom sound should be playing.
+    /// False during silent-mode sessions, and false at Level 1 (no
+    /// students present, so no classroom ambience makes sense).
+    /// </summary>
+    private bool ShouldPlayAmbientSound()
+    {
+        if (classroomAmbience == null) return false;
+        if (sessionManager == null || !sessionManager.IsSessionActive) return false;
+        if (sessionManager.IsSilentMode) return false;
+        if (levelManager != null && levelManager.GetCurrentLevel() == 1) return false;
+
+        return true;
     }
 
     // ========================================
@@ -129,18 +176,12 @@ public class AudioManager : MonoBehaviour
 
     private void OnSessionStarted()
     {
-        Debug.Log("AudioManager: Session started — playing ambient sound");
+        Debug.Log("AudioManager: Session started");
 
-        // Play session start chime
+        // The start chime always plays, even in silent mode — silent
+        // mode only affects the looping background classroom sound.
         PlaySFX(sessionStartSound);
 
-        // Start ambient classroom sound
-        if (classroomAmbience != null && ambientSource != null)
-        {
-            ambientSource.Play();
-        }
-
-        // Initialize level tracking
         if (levelManager != null)
         {
             lastLevel = levelManager.GetCurrentLevel();
@@ -149,14 +190,10 @@ public class AudioManager : MonoBehaviour
 
     private void OnSessionEnded()
     {
-        Debug.Log("AudioManager: Session ended — stopping ambient sound");
+        Debug.Log("AudioManager: Session ended");
 
-        // Stop ambient sound
-        if (ambientSource != null && ambientSource.isPlaying)
-        {
-            ambientSource.Stop();
-        }
-
+        // Ambient sound is stopped automatically by UpdateAmbientSoundState()
+        // on the next frame, since IsSessionActive is now false.
         lastLevel = -1;
     }
 

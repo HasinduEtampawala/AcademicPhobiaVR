@@ -76,6 +76,7 @@ public class SessionManager : MonoBehaviour
 
     private bool isSessionActive = false;
     private bool isSessionPaused = false;
+    private bool isSilentMode = false;
     private float sessionStartTime = 0f;
     private float sessionElapsedTime = 0f;
     private float pausedTime = 0f;
@@ -108,6 +109,12 @@ public class SessionManager : MonoBehaviour
     /// Returns the current session level.
     /// </summary>
     public int CurrentSessionLevel => currentSessionLevel;
+
+    /// <summary>
+    /// True when the current session was started in silent mode
+    /// (background ambient sound intentionally disabled).
+    /// </summary>
+    public bool IsSilentMode => isSilentMode;
 
     // ========================================
     // UNITY LIFECYCLE METHODS
@@ -159,7 +166,7 @@ public class SessionManager : MonoBehaviour
     /// Starts a new practice session at the specified level.
     /// </summary>
     /// <param name="level">The level to start at (1-4)</param>
-    public void StartSession(int level)
+    public void StartSession(int level, bool silent = false)
     {
         // Validate level
         if (level < 1 || level > 4)
@@ -178,6 +185,7 @@ public class SessionManager : MonoBehaviour
         // Set session state
         isSessionActive = true;
         isSessionPaused = false;
+        isSilentMode = silent;
         currentSessionLevel = level;
         sessionStartTime = Time.time;
         sessionElapsedTime = 0f;
@@ -230,6 +238,7 @@ public class SessionManager : MonoBehaviour
         // Reset session state
         isSessionActive = false;
         isSessionPaused = false;
+        isSilentMode = false;
 
         // Update UI
         ShowMainMenu();
@@ -370,6 +379,24 @@ public class SessionManager : MonoBehaviour
     public void StartSessionLevel4()
     {
         StartSession(4);
+    }
+
+    /// <summary>Starts Level 2 with background sound disabled.</summary>
+    public void StartSessionLevel2Silent()
+    {
+        StartSession(2, true);
+    }
+
+    /// <summary>Starts Level 3 with background sound disabled.</summary>
+    public void StartSessionLevel3Silent()
+    {
+        StartSession(3, true);
+    }
+
+    /// <summary>Starts Level 4 with background sound disabled.</summary>
+    public void StartSessionLevel4Silent()
+    {
+        StartSession(4, true);
     }
 
     // ========================================
